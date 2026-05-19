@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>HERO BUNKER</title>
+<link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Oswald:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#03060c;--deep:#080f1a;--panel:#0c1624;--card:#111e30;--card2:#182840;
+  --red:#ff2020;--red2:rgba(255,32,32,.15);--gold:#ffc107;--gold2:rgba(255,193,7,.1);
+  --cyan:#00e5ff;--cyan2:rgba(0,229,255,.1);--green:#00ff88;--green2:rgba(0,255,136,.1);
+  --muted:#3a5a7a;--dim:#1a3050;--text:#eef6ff;
+  --mono:'Share Tech Mono',monospace;--display:'Black Ops One',cursive;--body:'Oswald',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{min-height:100vh;background:var(--ink);}
+body{font-family:var(--body);color:var(--text);overflow-x:hidden;}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.05) 2px,rgba(0,0,0,.05) 4px);}
+
+#bgc{position:fixed;inset:0;z-index:0;display:block;}
+
+/* ── Settings gear ── */
+#gear-btn{
+  position:fixed;top:16px;right:16px;z-index:500;
+  width:46px;height:46px;border-radius:50%;
+  background:rgba(10,20,40,.85);border:1px solid rgba(0,229,255,.3);
+  color:var(--cyan);font-size:22px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s;backdrop-filter:blur(8px);
+}
+#gear-btn:hover{background:rgba(0,229,255,.15);border-color:var(--cyan);transform:rotate(30deg);}
+
+/* ── Settings panel ── */
+#settings-panel{
+  position:fixed;top:0;right:-360px;width:340px;max-width:95vw;height:100vh;
+  z-index:600;background:rgba(8,15,26,.97);border-left:1px solid var(--cyan);
+  backdrop-filter:blur(16px);transition:right .3s cubic-bezier(.4,0,.2,1);
+  display:flex;flex-direction:column;padding:28px 24px;gap:28px;overflow-y:auto;
+}
+#settings-panel.open{right:0;}
+.set-title{font-family:var(--display);font-size:24px;letter-spacing:2px;color:var(--cyan);}
+.set-close{
+  position:absolute;top:18px;right:18px;background:transparent;border:1px solid var(--dim);
+  color:var(--muted);font-family:var(--mono);font-size:11px;padding:5px 10px;
+  border-radius:2px;cursor:pointer;transition:all .2s;
+}
+.set-close:hover{border-color:var(--red);color:var(--red);}
+.set-section{display:flex;flex-direction:column;gap:12px;}
+.set-label{font-family:var(--mono);font-size:10px;letter-spacing:3px;color:var(--muted);}
+.lang-row{display:flex;gap:10px;}
+.lang-btn{
+  flex:1;padding:12px;border-radius:3px;background:var(--card);
+  border:1px solid var(--dim);color:var(--muted);
+  font-family:var(--display);font-size:16px;letter-spacing:2px;cursor:pointer;transition:all .2s;
+}
+.lang-btn.active{background:var(--cyan);border-color:var(--cyan);color:#000;}
+.vol-row{display:flex;align-items:center;gap:12px;}
+.vol-val{font-family:var(--mono);font-size:13px;color:var(--cyan);width:36px;text-align:right;}
+input[type=range]{
+  flex:1;accent-color:var(--cyan);height:4px;cursor:pointer;
+  background:linear-gradient(90deg,var(--cyan) var(--pct,70%),var(--dim) var(--pct,70%));
+}
+.toggle-row{display:flex;align-items:center;gap:12px;}
+.toggle{
+  position:relative;width:44px;height:24px;cursor:pointer;
+  background:var(--dim);border-radius:12px;border:none;
+  transition:background .2s;flex-shrink:0;
+}
+.toggle.on{background:var(--cyan);}
+.toggle::after{
+  content:'';position:absolute;top:3px;left:3px;
+  width:18px;height:18px;border-radius:50%;background:#fff;
+  transition:left .2s;
+}
+.toggle.on::after{left:23px;}
+.toggle-label{font-size:16px;font-weight:500;}
+
+/* ── Screens ── */
+.screen{display:none;position:relative;z-index:2;min-height:100vh;}
+.screen.on{display:flex;flex-direction:column;}
+.screen-overlay{
+  position:absolute;inset:0;z-index:-1;
+  background:rgba(3,6,12,.78);backdrop-filter:blur(1px);
+}
+
+/* ━━ SETUP ━━ */
+#S_setup{align-items:center;justify-content:center;padding:40px 20px;}
+.logo-pre{font-family:var(--mono);font-size:10px;letter-spacing:5px;color:var(--red);
+  text-align:center;margin-bottom:16px;animation:blink 1.8s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.logo-h{font-family:var(--display);font-size:clamp(60px,16vw,110px);line-height:.9;text-align:center;
+  background:linear-gradient(180deg,#fff 0%,#b0d4f0 60%,var(--cyan) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.logo-b{font-family:var(--display);font-size:clamp(60px,16vw,110px);line-height:.9;text-align:center;
+  color:var(--red);text-shadow:0 0 50px rgba(255,32,32,.6);}
+.logo-sub{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:4px;
+  text-align:center;margin-top:14px;margin-bottom:44px;}
+.setup-card{background:rgba(12,22,36,.92);border:1px solid rgba(0,229,255,.15);
+  border-radius:4px;padding:36px;width:100%;max-width:440px;position:relative;
+  box-shadow:0 0 60px rgba(0,0,0,.7);}
+.setup-card::before{content:'';position:absolute;top:0;left:20%;right:20%;height:2px;
+  background:linear-gradient(90deg,transparent,var(--red),transparent);}
+.flabel{font-family:var(--mono);font-size:10px;letter-spacing:3px;color:var(--red);margin-bottom:14px;}
+.npicker{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:32px;}
+.nbtn{width:54px;height:54px;border-radius:3px;background:var(--card);border:1px solid var(--dim);
+  color:var(--muted);font-family:var(--display);font-size:22px;cursor:pointer;transition:all .2s;}
+.nbtn:hover{border-color:var(--cyan);color:var(--cyan);}
+.nbtn.on{background:var(--red);border-color:var(--red);color:#fff;box-shadow:0 0 20px rgba(255,32,32,.4);}
+.btn-go{width:100%;padding:18px;background:var(--red);color:#fff;border:none;border-radius:3px;
+  cursor:pointer;font-family:var(--display);font-size:22px;letter-spacing:3px;
+  text-transform:uppercase;transition:all .2s;box-shadow:0 4px 0 rgba(0,0,0,.5);}
+.btn-go:disabled{opacity:.2;cursor:default;}
+.btn-go:not(:disabled):hover{background:#ff4040;transform:translateY(-2px);box-shadow:0 6px 24px rgba(255,32,32,.45);}
+.btn-go:not(:disabled):active{transform:translateY(0);}
+
+/* ━━ THREAT ━━ */
+#S_threat{align-items:center;padding:0;}
+.threat-inner{width:100%;max-width:680px;margin:0 auto;padding:36px 22px 60px;position:relative;z-index:2;}
+.threat-alert{font-family:var(--mono);font-size:10px;letter-spacing:5px;color:var(--red);
+  text-align:center;margin-bottom:8px;animation:blink 1s infinite;}
+.threat-icon{font-size:80px;text-align:center;margin:14px 0;animation:shake 3s ease-in-out infinite;}
+@keyframes shake{0%,100%{transform:scale(1) rotate(-1deg)}50%{transform:scale(1.07) rotate(1deg)}}
+.threat-name{font-family:var(--display);font-size:clamp(30px,7vw,56px);text-align:center;
+  color:var(--red);text-shadow:0 0 30px rgba(255,32,32,.7);line-height:1.1;margin-bottom:10px;}
+.threat-desc{font-size:16px;font-weight:300;color:#8aaccc;text-align:center;line-height:1.7;margin-bottom:22px;}
+.tpanel{background:rgba(12,22,36,.9);border:1px solid rgba(255,32,32,.18);border-radius:4px;
+  padding:20px;margin-bottom:12px;position:relative;}
+.tpanel::before{content:'';position:absolute;top:0;left:10%;right:10%;height:1px;
+  background:linear-gradient(90deg,transparent,var(--red),transparent);opacity:.5;}
+.tpanel-lbl{font-family:var(--mono);font-size:10px;letter-spacing:3px;margin-bottom:12px;
+  display:flex;align-items:center;gap:8px;}
+.tpanel-lbl::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.05);}
+.tpanel-lbl.cy{color:var(--cyan);}
+.tpanel-lbl.gd{color:var(--gold);}
+.tpanel-lbl.rd{color:var(--red);}
+.tags{display:flex;flex-wrap:wrap;gap:7px;}
+.tag{font-family:var(--mono);font-size:11px;padding:4px 11px;border-radius:2px;letter-spacing:1px;}
+.tag.a{background:var(--cyan2);color:var(--cyan);border:1px solid rgba(0,229,255,.25);}
+.tag.w{background:var(--gold2);color:var(--gold);border:1px solid rgba(255,193,7,.25);}
+.surv-txt{font-size:15px;font-weight:300;color:#9dc4e0;line-height:1.75;}
+.surv-txt strong{color:var(--gold);}
+.btn-thr{width:100%;padding:17px;margin-top:22px;background:transparent;
+  border:2px solid var(--red);color:var(--red);border-radius:3px;cursor:pointer;
+  font-family:var(--display);font-size:19px;letter-spacing:3px;transition:all .2s;}
+.btn-thr:hover{background:var(--red2);box-shadow:0 0 30px rgba(255,32,32,.3);}
+
+/* ━━ PASS ━━ */
+#S_pass{align-items:center;justify-content:center;padding:40px 24px;text-align:center;}
+.pass-badge{font-family:var(--mono);font-size:10px;letter-spacing:4px;color:var(--muted);
+  border:1px solid var(--dim);padding:5px 16px;border-radius:2px;margin-bottom:32px;
+  background:rgba(12,22,36,.8);}
+.pass-emoji{font-size:80px;margin-bottom:18px;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.09)}}
+.pass-to{font-family:var(--mono);font-size:11px;letter-spacing:4px;color:var(--muted);margin-bottom:10px;}
+.pass-name{font-family:var(--display);font-size:clamp(40px,11vw,70px);color:var(--text);margin-bottom:8px;}
+.btn-pass{padding:20px 56px;background:transparent;border:2px solid var(--cyan);color:var(--cyan);
+  border-radius:3px;cursor:pointer;font-family:var(--display);font-size:22px;
+  letter-spacing:3px;transition:all .2s;margin-top:14px;}
+.btn-pass:hover{background:var(--cyan2);box-shadow:0 0 30px rgba(0,229,255,.25);}
+.pass-hint{font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:2px;margin-top:22px;}
+
+/* ━━ PRIVATE ━━ */
+#S_private{padding:28px 20px 60px;max-width:520px;margin:0 auto;width:100%;}
+.pv-top{text-align:center;margin-bottom:26px;}
+.pv-rnd{font-family:var(--mono);font-size:10px;letter-spacing:3px;color:var(--muted);margin-bottom:8px;}
+.pv-name{font-family:var(--display);font-size:34px;margin-bottom:18px;}
+.pv-instr{font-size:17px;font-weight:300;color:#6a8aaa;line-height:1.5;}
+.pv-instr b{color:var(--text);}
+.slabel{font-family:var(--mono);font-size:10px;letter-spacing:3px;color:var(--cyan);
+  margin-bottom:10px;display:flex;align-items:center;gap:10px;}
+.slabel::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.05);}
+.cat-sec{margin-bottom:8px;}
+.cat-hd{font-family:var(--mono);font-size:10px;letter-spacing:3px;padding:7px 12px;margin-bottom:7px;
+  display:flex;align-items:center;gap:10px;}
+.cat-hd::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.05);}
+.t-card{background:var(--card);border:2px solid var(--dim);border-radius:6px;
+  padding:15px 18px;cursor:pointer;transition:all .18s;
+  display:flex;align-items:center;gap:14px;margin-bottom:6px;}
+.t-card.locked{opacity:.4;cursor:default;border-style:dashed;pointer-events:none;}
+.t-num{width:28px;height:28px;border-radius:50%;flex-shrink:0;background:var(--dim);
+  color:var(--muted);display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:12px;transition:all .18s;}
+.t-text{font-size:18px;font-weight:500;flex:1;}
+.t-chk{font-size:18px;opacity:0;transition:opacity .18s;}
+.t-card.sel .t-chk{opacity:1;}
+.rev-tag{font-family:var(--mono);font-size:9px;letter-spacing:2px;
+  border:1px solid var(--dim);padding:2px 8px;border-radius:2px;color:var(--muted);white-space:nowrap;}
+/* Category colour themes */
+.cat-ABILITY .cat-hd{color:var(--cyan);}
+.cat-ABILITY .t-card:not(.locked):hover,.cat-ABILITY .t-card.sel{border-color:var(--cyan);background:var(--cyan2);}
+.cat-ABILITY .t-card.sel .t-num{background:var(--cyan);color:#000;}
+.cat-ABILITY .t-chk{color:var(--cyan);}
+.cat-WEAPON .cat-hd{color:var(--gold);}
+.cat-WEAPON .t-card:not(.locked):hover,.cat-WEAPON .t-card.sel{border-color:var(--gold);background:var(--gold2);}
+.cat-WEAPON .t-card.sel .t-num{background:var(--gold);color:#000;}
+.cat-WEAPON .t-chk{color:var(--gold);}
+.cat-RACE .cat-hd{color:#b388ff;}
+.cat-RACE .t-card:not(.locked):hover,.cat-RACE .t-card.sel{border-color:#b388ff;background:rgba(179,136,255,.1);}
+.cat-RACE .t-card.sel .t-num{background:#b388ff;color:#000;}
+.cat-RACE .t-chk{color:#b388ff;}
+.cat-WEAKNESS .cat-hd{color:var(--red);}
+.cat-WEAKNESS .t-card:not(.locked):hover,.cat-WEAKNESS .t-card.sel{border-color:var(--red);background:var(--red2);}
+.cat-WEAKNESS .t-card.sel .t-num{background:var(--red);color:#fff;}
+.cat-WEAKNESS .t-chk{color:var(--red);}
+.cat-STRENGTH .cat-hd{color:var(--green);}
+.cat-STRENGTH .t-card:not(.locked):hover,.cat-STRENGTH .t-card.sel{border-color:var(--green);background:var(--green2);}
+.cat-STRENGTH .t-card.sel .t-num{background:var(--green);color:#000;}
+.cat-STRENGTH .t-chk{color:var(--green);}
+.btn-confirm{width:100%;padding:17px;background:var(--red);color:#fff;border:none;
+  border-radius:3px;cursor:pointer;margin-top:18px;font-family:var(--display);
+  font-size:20px;letter-spacing:3px;transition:all .2s;box-shadow:0 4px 0 rgba(0,0,0,.5);}
+.btn-confirm:disabled{opacity:.2;cursor:default;}
+.btn-confirm:not(:disabled):hover{background:#ff4040;box-shadow:0 0 24px rgba(255,32,32,.4);}
+
+/* ━━ BOARD ━━ */
+#S_board{padding:22px 18px 80px;max-width:1200px;margin:0 auto;width:100%;}
+.b-hdr{display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  margin-bottom:6px;padding-bottom:18px;border-bottom:1px solid rgba(255,255,255,.05);}
+.b-logo{font-family:var(--display);font-size:28px;letter-spacing:1px;}
+.b-logo span{color:var(--red);}
+.b-rnd{font-family:var(--mono);font-size:10px;letter-spacing:3px;color:var(--muted);
+  border:1px solid var(--dim);padding:4px 12px;border-radius:2px;}
+.b-threat{font-family:var(--mono);font-size:11px;letter-spacing:1px;color:var(--red);
+  background:rgba(255,32,32,.07);border:1px solid rgba(255,32,32,.2);
+  padding:4px 14px;border-radius:2px;margin-left:auto;}
+.stats-row{display:flex;gap:26px;flex-wrap:wrap;padding:16px 0 20px;}
+.stat-n{font-family:var(--display);font-size:34px;color:var(--cyan);line-height:1;}
+.stat-l{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--muted);margin-top:2px;}
+.b-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(224px,1fr));gap:13px;margin-bottom:24px;}
+.b-card{background:rgba(17,30,48,.92);border:1px solid rgba(255,255,255,.06);
+  border-radius:4px;padding:17px;position:relative;overflow:hidden;
+  animation:fadeUp .3s ease both;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.b-card.elim{opacity:.3;border-color:rgba(255,32,32,.25);}
+.b-stripe{position:absolute;top:0;left:0;width:3px;height:100%;}
+.b-pname{font-family:var(--display);font-size:19px;margin-bottom:4px;}
+.b-status{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:13px;}
+.b-traits{list-style:none;}
+.b-trait{display:flex;align-items:flex-start;gap:8px;
+  padding:5px 0;border-bottom:1px solid rgba(255,255,255,.03);font-size:13px;}
+.b-trait:last-child{border:none;}
+.b-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+.b-dot.k{background:var(--cyan);}
+.b-dot.u{background:var(--dim);}
+.b-cat{font-family:var(--mono);font-size:8px;flex-shrink:0;margin-top:2px;opacity:.5;}
+.b-tt.hid{color:var(--dim);font-family:var(--mono);font-size:10px;letter-spacing:1px;}
+.elim-stamp{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-18deg);
+  font-family:var(--display);font-size:20px;color:var(--red);border:2px solid var(--red);
+  padding:3px 10px;letter-spacing:3px;opacity:.5;pointer-events:none;white-space:nowrap;}
+.vote-wrap{background:rgba(12,22,36,.92);border:1px solid rgba(255,193,7,.15);
+  border-radius:4px;padding:22px;margin-bottom:16px;position:relative;}
+.vote-wrap::before{content:'';position:absolute;top:0;left:10%;right:10%;height:1px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.4;}
+.vgrid{display:flex;flex-wrap:wrap;gap:10px;margin-top:11px;}
+.vbtn{padding:12px 20px;border-radius:3px;background:transparent;
+  border:1px solid rgba(255,32,32,.4);color:var(--red);
+  font-family:var(--body);font-size:16px;font-weight:600;
+  letter-spacing:.5px;cursor:pointer;transition:all .2s;}
+.vbtn:hover{background:rgba(255,32,32,.1);border-color:var(--red);box-shadow:0 0 14px rgba(255,32,32,.2);}
+.msgbar{font-family:var(--mono);font-size:11px;letter-spacing:2px;text-align:center;
+  padding:13px;border-radius:3px;border:1px solid var(--cyan);
+  background:rgba(0,229,255,.06);color:var(--cyan);margin-top:12px;display:none;}
+.msgbar.on{display:block;}
+
+/* ━━ END ━━ */
+#S_end{align-items:center;justify-content:center;padding:60px 24px;text-align:center;}
+.end-bg-glow{position:fixed;inset:0;z-index:-1;
+  background:radial-gradient(ellipse 80% 60% at 50% 40%,rgba(0,255,136,.07) 0%,transparent 70%);}
+.end-trophy{font-size:80px;margin-bottom:18px;animation:pulse 2s infinite;}
+.end-title{font-family:var(--display);font-size:clamp(42px,11vw,80px);
+  color:var(--green);text-shadow:0 0 40px rgba(0,255,136,.4);margin-bottom:8px;}
+.end-sub{font-family:var(--mono);font-size:11px;letter-spacing:3px;color:var(--muted);}
+.surv-list{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:34px;}
+.surv-chip{background:rgba(0,255,136,.07);border:1px solid rgba(0,255,136,.2);
+  border-radius:4px;padding:13px 22px;font-family:var(--body);font-size:18px;font-weight:600;}
+.btn-restart{margin-top:48px;padding:15px 48px;background:transparent;
+  border:2px solid var(--cyan);color:var(--cyan);border-radius:3px;cursor:pointer;
+  font-family:var(--display);font-size:17px;letter-spacing:3px;transition:all .2s;}
+.btn-restart:hover{background:var(--cyan2);}
+
+@media(max-width:480px){.b-grid{grid-template-columns:1fr 1fr;}}
+</style>
+</head>
+<body>
+
+<!-- CANVAS BACKGROUND -->
+<canvas id="bgc"></canvas>
+
+<!-- GEAR BUTTON -->
+<button id="gear-btn" title="Settings">⚙</button>
+
+<!-- SETTINGS PANEL -->
+<div id="settings-panel">
+  <div style="position:relative;">
+    <div class="set-title" id="set-title">НАСТРОЙКИ</div>
+    <button class="set-close" id="set-close">✕</button>
+  </div>
+  <div class="set-section">
+    <div class="set-label" id="set-lang-lbl">ЯЗЫК / LANGUAGE</div>
+    <div class="lang-row">
+      <button class="lang-btn on" id="btn-ru" onclick="setLang('ru')">RU</button>
+      <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
+    </div>
+  </div>
+  <div class="set-section">
+    <div class="set-label" id="set-music-lbl">МУЗЫКА</div>
+    <div class="toggle-row">
+      <button class="toggle on" id="tog-music" onclick="toggleMusic()"></button>
+      <span class="toggle-label" id="tog-music-lbl">ON</span>
+    </div>
+    <div class="vol-row">
+      <span style="font-family:var(--mono);font-size:11px;color:var(--muted);">🎵</span>
+      <input type="range" id="vol-music" min="0" max="100" value="35" oninput="setMusicVol(this.value)">
+      <span class="vol-val" id="vol-music-val">35</span>
+    </div>
+  </div>
+  <div class="set-section">
+    <div class="set-label" id="set-sfx-lbl">ЗВУКОВЫЕ ЭФФЕКТЫ</div>
+    <div class="toggle-row">
+      <button class="toggle on" id="tog-sfx" onclick="toggleSfx()"></button>
+      <span class="toggle-label" id="tog-sfx-lbl">ON</span>
+    </div>
+    <div class="vol-row">
+      <span style="font-family:var(--mono);font-size:11px;color:var(--muted);">🔊</span>
+      <input type="range" id="vol-sfx" min="0" max="100" value="70" oninput="setSfxVol(this.value)">
+      <span class="vol-val" id="vol-sfx-val">70</span>
+    </div>
+  </div>
+</div>
+
+<!-- SETUP -->
+<div class="screen on" id="S_setup">
+  <div class="screen-overlay"></div>
+  <div class="logo-pre" id="logo-pre">⚠ ПРОТОКОЛ ВЫЖИВАНИЯ АКТИВИРОВАН</div>
+  <div class="logo-h">HERO</div>
+  <div class="logo-b">BUNKER</div>
+  <div class="logo-sub" id="logo-sub">// система отбора героев · v3.0 //</div>
+  <div class="setup-card">
+    <div class="flabel" id="flabel">👥 КОЛИЧЕСТВО ИГРОКОВ</div>
+    <div class="npicker" id="npicker"></div>
+    <button class="btn-go" id="btn-go" disabled onclick="startGame()">⚡ НАЧАТЬ МИССИЮ</button>
+  </div>
+</div>
+
+<!-- THREAT -->
+<div class="screen" id="S_threat">
+  <div class="screen-overlay"></div>
+  <div class="threat-inner">
+    <div class="threat-alert" id="th-alert">🚨 ВНИМАНИЕ — УГРОЗА ОБНАРУЖЕНА 🚨</div>
+    <div class="threat-icon" id="th-icon">💀</div>
+    <div class="threat-name" id="th-name">—</div>
+    <div class="threat-desc" id="th-desc">—</div>
+    <div class="tpanel">
+      <div class="tpanel-lbl cy" id="th-abil-lbl">⚡ СПОСОБНОСТИ ПРОТИВ УГРОЗЫ</div>
+      <div class="tags" id="th-abil"></div>
+    </div>
+    <div class="tpanel">
+      <div class="tpanel-lbl gd" id="th-weap-lbl">⚔️ ОРУЖИЕ ПРОТИВ УГРОЗЫ</div>
+      <div class="tags" id="th-weap"></div>
+    </div>
+    <div class="tpanel">
+      <div class="tpanel-lbl rd" id="th-surv-lbl">🛡 КАК ВЫЖИТЬ</div>
+      <div class="surv-txt" id="th-surv">—</div>
+    </div>
+    <button class="btn-thr" id="btn-thr" onclick="toPass()">НАЧАТЬ ОТБОР ГЕРОЕВ →</button>
+  </div>
+</div>
+
+<!-- PASS -->
+<div class="screen" id="S_pass">
+  <div class="screen-overlay"></div>
+  <div class="pass-badge" id="pass-badge">РАУНД 1</div>
+  <div class="pass-emoji">📱</div>
+  <div class="pass-to" id="pass-to">ПЕРЕДАЙ ТЕЛЕФОН ИГРОКУ</div>
+  <div class="pass-name" id="pass-name">—</div>
+  <button class="btn-pass" id="btn-pass" onclick="openPrivate()">👁 ПОСМОТРЕТЬ МОИ КАРТЫ</button>
+  <div class="pass-hint" id="pass-hint">// ОСТАЛЬНЫЕ НЕ СМОТРЯТ НА ЭКРАН //</div>
+</div>
+
+<!-- PRIVATE -->
+<div class="screen" id="S_private">
+  <div class="screen-overlay"></div>
+  <div class="pv-top">
+    <div class="pv-rnd" id="pv-rnd">РАУНД 1</div>
+    <div class="pv-name" id="pv-name">—</div>
+    <div class="pv-instr" id="pv-instr">Выбери <b>одну карту</b> которую хочешь<br>раскрыть остальным игрокам:</div>
+  </div>
+  <div id="trait-secs"></div>
+  <button class="btn-confirm" id="btn-confirm" disabled onclick="confirmTrait()">✓ РАСКРЫТЬ ВЫБРАННУЮ</button>
+</div>
+
+<!-- BOARD -->
+<div class="screen" id="S_board">
+  <div class="screen-overlay"></div>
+  <div class="b-hdr">
+    <div class="b-logo">HERO <span>BUNKER</span></div>
+    <div class="b-rnd" id="b-rnd">РАУНД 1</div>
+    <div class="b-threat" id="b-threat">—</div>
+  </div>
+  <div class="stats-row" id="b-stats"></div>
+  <div class="slabel" id="b-cand-lbl">🧬 КАНДИДАТЫ</div>
+  <div class="b-grid" id="b-grid"></div>
+  <div id="b-vote"></div>
+  <div class="msgbar" id="b-msg"></div>
+</div>
+
+<!-- END -->
+<div class="screen" id="S_end">
+  <div class="screen-overlay"></div>
+  <div class="end-bg-glow"></div>
+  <div class="end-trophy">🏆</div>
+  <div class="end-title" id="end-title">БУНКЕР ЗАКРЫТ</div>
+  <div class="end-sub" id="end-sub">// ВЫЖИВШИЕ ГЕРОИ ОТОБРАНЫ //</div>
+  <div class="surv-list" id="e-list"></div>
+  <button class="btn-restart" id="btn-restart" onclick="location.reload()">↺ НОВАЯ МИССИЯ</button>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════
+   CANVAS BACKGROUND — DESTROYED CITY
+═══════════════════════════════════════════════ */
+const BG = (() => {
+  const c = document.getElementById('bgc');
+  const ctx = c.getContext('2d');
+  let W, H, bldgs = [], particles = [], heroes = [], explosions = [], bolt = null, t = 0;
+
+  function ri(n){ return Math.random()*n|0; }
+  function rnd(){ return Math.random(); }
+
+  function resize(){
+    W = c.width = window.innerWidth;
+    H = c.height = window.innerHeight;
+    build();
+  }
+
+  function build(){
+    bldgs = [];
+    // Back layer
+    genRow(0.38, 0.5, 18, 45, 0.35);
+    // Mid layer
+    genRow(0.28, 0.62, 35, 80, 0.65);
+    // Foreground silhouettes (pure black)
+    let fx = -20;
+    while(fx < W+80){
+      const fw = 60+ri(120), fh = 55+ri(90);
+      bldgs.push({x:fx,y:H-fh,w:fw,h:fh,fg:true});
+      fx += fw - 15 + ri(30);
+    }
+    particles = []; for(let i=0;i<90;i++) spawnParticle(true);
+    heroes = [
+      {x:W+60,y:H*.22,vx:-.9,vy:0,sz:38,ph:0,dir:-1},
+      {x:-60, y:H*.32,vx:1.3,vy:0,sz:26,ph:Math.PI,dir:1},
+    ];
+    explosions = []; bolt = null;
+  }
+
+  function genRow(minYf, maxYf, minW, maxW, alpha){
+    let x = -30;
+    while(x < W+100){
+      const w = minW + ri(maxW-minW);
+      const h = H*(minYf + rnd()*(maxYf-minYf));
+      const y = H - h;
+      const dmg = rnd() < .38;
+      // Pre-build jagged top
+      const jag = [];
+      if(dmg){
+        const steps = Math.ceil(w/9)+1;
+        for(let i=0;i<=steps;i++){
+          jag.push({x:x+(i/steps)*w, y:y+(rnd()<.4?rnd()*28:rnd()*6)});
+        }
+      }
+      // Pre-build windows
+      const wins = [];
+      for(let wx=x+5;wx<x+w-8;wx+=11){
+        for(let wy=y+12;wy<y+h-12;wy+=16){
+          if(rnd()<.28) wins.push({x:wx,y:wy,lit:rnd()<.35,flk:rnd()<.22,ph:rnd()*Math.PI*2});
+        }
+      }
+      bldgs.push({x,y,w,h,alpha,dmg,jag,wins,fireX:dmg?x+w*.2+rnd()*w*.6:null});
+      x += w + ri(14) - 4;
+    }
+  }
+
+  function spawnParticle(init=false){
+    const fire = rnd() < .58;
+    const px = rnd()*W;
+    particles.push({
+      x:px, y:init ? H-rnd()*H*.7 : H*.85+rnd()*H*.15,
+      vx:(rnd()-.5)*.55, vy:-(0.45+rnd()*1.6),
+      life:1, dec:fire?.003+rnd()*.007:.004+rnd()*.006,
+      sz:fire?2+rnd()*7:5+rnd()*14, fire,
+    });
+  }
+
+  function genBolt(x){
+    const segs=[[x,0]];
+    let cx=x, cy=0;
+    for(let i=1;i<10;i++){
+      cx+=(rnd()-.5)*75; cy=H*.65*(i/9);
+      segs.push([cx,cy]);
+    }
+    return segs;
+  }
+
+  function drawBuilding(b){
+    if(b.fg){ ctx.fillStyle='#000'; ctx.fillRect(b.x,b.y,b.w,b.h); return; }
+    const d=Math.round(14*(1-b.alpha));
+    ctx.fillStyle=`rgb(${d},${d+2},${d+5})`;
+    if(b.dmg && b.jag.length){
+      ctx.beginPath();
+      ctx.moveTo(b.jag[0].x, b.jag[0].y);
+      b.jag.forEach(p=>ctx.lineTo(p.x,p.y));
+      ctx.lineTo(b.x+b.w, b.y+b.h+100);
+      ctx.lineTo(b.x, b.y+b.h+100);
+      ctx.closePath(); ctx.fill();
+    } else {
+      ctx.fillRect(b.x,b.y,b.w,b.h);
+    }
+    b.wins.forEach(w=>{
+      if(!w.lit) return;
+      const flk = w.flk ? Math.sin(t*3+w.ph)>.2 : true;
+      if(!flk) return;
+      const a = b.alpha*(0.38+Math.sin(t*2.2+w.ph)*.1);
+      ctx.fillStyle=`rgba(255,155,50,${a})`;
+      ctx.fillRect(w.x,w.y,6,8);
+    });
+    if(b.fireX){
+      const g=ctx.createRadialGradient(b.fireX,b.y+8,0,b.fireX,b.y+8,28);
+      const p=.45+Math.sin(t*4.5+b.x)*.3;
+      g.addColorStop(0,`rgba(255,195,40,${p*.85*b.alpha})`);
+      g.addColorStop(.5,`rgba(255,75,10,${p*.5*b.alpha})`);
+      g.addColorStop(1,'transparent');
+      ctx.fillStyle=g; ctx.fillRect(b.fireX-32,b.y-22,64,52);
+    }
+  }
+
+  function drawHero(h){
+    ctx.save(); ctx.translate(h.x, h.y+Math.sin(h.ph)*9);
+    ctx.scale(h.dir,1);
+    ctx.fillStyle='rgba(8,12,22,.88)';
+    const s=h.sz;
+    // Cape
+    ctx.beginPath();
+    ctx.moveTo(s*.1,-s*.3);
+    ctx.bezierCurveTo(s*.65,s*.05,s*.5,s*.55,s*.1,s*.65);
+    ctx.bezierCurveTo(-s*.1,s*.5,-s*.15,s*.05,-s*.05,-s*.3);
+    ctx.fill();
+    // Body
+    ctx.fillRect(-s*.13,-s*.42,s*.26,s*.52);
+    // Head
+    ctx.beginPath(); ctx.ellipse(0,-s*.55,s*.12,s*.14,0,0,Math.PI*2); ctx.fill();
+    // Arms
+    ctx.fillRect(-s*.42,-s*.3,s*.29,s*.07);
+    ctx.fillRect(s*.13,-s*.3,s*.29,s*.07);
+    // Legs
+    ctx.fillRect(-s*.12,s*.1,s*.1,s*.26);
+    ctx.fillRect(s*.02,s*.1,s*.1,s*.26);
+    ctx.restore();
+  }
+
+  function drawParticle(p){
+    if(p.fire){
+      const g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.sz);
+      g.addColorStop(0,`rgba(255,200,50,${p.life*.8})`);
+      g.addColorStop(.5,`rgba(255,80,10,${p.life*.5})`);
+      g.addColorStop(1,'transparent');
+      ctx.fillStyle=g; ctx.fillRect(p.x-p.sz,p.y-p.sz,p.sz*2,p.sz*2);
+    } else {
+      const g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.sz);
+      g.addColorStop(0,`rgba(70,80,95,${p.life*.28})`);
+      g.addColorStop(1,'transparent');
+      ctx.fillStyle=g; ctx.fillRect(p.x-p.sz,p.y-p.sz,p.sz*2,p.sz*2);
+    }
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    // Sky
+    const sk=ctx.createLinearGradient(0,0,0,H);
+    sk.addColorStop(0,'#010408'); sk.addColorStop(.55,'#080d16');
+    sk.addColorStop(.88,'#160800'); sk.addColorStop(1,'#220900');
+    ctx.fillStyle=sk; ctx.fillRect(0,0,W,H);
+    // Horizon glow
+    const hg=ctx.createRadialGradient(W/2,H,0,W/2,H,W*.85);
+    hg.addColorStop(0,'rgba(170,55,0,.42)'); hg.addColorStop(.5,'rgba(90,25,0,.2)'); hg.addColorStop(1,'transparent');
+    ctx.fillStyle=hg; ctx.fillRect(0,0,W,H);
+    // Moon
+    const mx=W*.76, my=H*.1;
+    const mg=ctx.createRadialGradient(mx,my,0,mx,my,55);
+    mg.addColorStop(0,'rgba(190,70,25,.35)'); mg.addColorStop(1,'transparent');
+    ctx.fillStyle=mg; ctx.fillRect(0,0,W,H);
+    ctx.beginPath(); ctx.arc(mx,my,25,0,Math.PI*2);
+    ctx.fillStyle='#7a2e12'; ctx.fill();
+    ctx.strokeStyle='rgba(0,0,0,.6)'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(mx-9,my-14); ctx.lineTo(mx+4,my+5); ctx.lineTo(mx+11,my+17); ctx.stroke();
+    // Lightning flash
+    if(bolt){ ctx.fillStyle=`rgba(160,190,255,${bolt.life*.14})`; ctx.fillRect(0,0,W,H); }
+    // Layers
+    bldgs.filter(b=>!b.fg && b.alpha<.6).forEach(drawBuilding);
+    particles.filter(p=>p.fire).forEach(drawParticle);
+    bldgs.filter(b=>!b.fg && b.alpha>=.6).forEach(drawBuilding);
+    heroes.forEach(drawHero);
+    particles.filter(p=>!p.fire).forEach(drawParticle);
+    // Bolt
+    if(bolt){
+      ctx.save(); ctx.strokeStyle=`rgba(180,205,255,${bolt.life})`; ctx.lineWidth=2;
+      ctx.shadowColor='#aaccff'; ctx.shadowBlur=18;
+      ctx.beginPath();
+      bolt.segs.forEach(([bx,by],i)=>i?ctx.lineTo(bx,by):ctx.moveTo(bx,by));
+      ctx.stroke(); ctx.restore();
+    }
+    // Explosions
+    explosions.forEach(e=>{
+      const g=ctx.createRadialGradient(e.x,e.y,0,e.x,e.y,e.r);
+      g.addColorStop(0,`rgba(255,240,150,${e.life*.9})`);
+      g.addColorStop(.3,`rgba(255,120,20,${e.life*.7})`);
+      g.addColorStop(.7,`rgba(200,40,0,${e.life*.4})`);
+      g.addColorStop(1,'transparent');
+      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(e.x,e.y,e.r,0,Math.PI*2); ctx.fill();
+    });
+    bldgs.filter(b=>b.fg).forEach(drawBuilding);
+  }
+
+  function update(){
+    t += .016;
+    particles = particles.filter(p=>p.life>0);
+    particles.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; p.life-=p.dec; p.sz*=1.005; if(!p.fire) p.vx+=(rnd()-.5)*.05; });
+    while(particles.length<100) spawnParticle();
+    heroes.forEach(h=>{
+      h.x+=h.vx; h.ph+=.018;
+      h.y+=Math.sin(t*.9+h.ph)*.25;
+      if(h.vx<0&&h.x<-100){ h.x=W+100; h.y=H*(.15+rnd()*.3); }
+      if(h.vx>0&&h.x>W+100){ h.x=-100; h.y=H*(.15+rnd()*.3); }
+    });
+    if(!bolt && rnd()<.004){
+      const bx=W*.2+rnd()*W*.6;
+      bolt={segs:genBolt(bx),x:bx,life:1,flicks:5};
+    }
+    if(bolt){
+      bolt.life-=.055; bolt.flicks--;
+      if(bolt.life<=0) bolt=null;
+      else if(bolt.flicks>0) bolt.segs=genBolt(bolt.x);
+    }
+    if(rnd()<.0035) explosions.push({x:W*.1+rnd()*W*.8,y:H*.3+rnd()*H*.4,r:0,maxR:25+ri(55),life:1});
+    explosions=explosions.filter(e=>e.life>0);
+    explosions.forEach(e=>{ e.r=Math.min(e.r+2.2,e.maxR); e.life-=.024; });
+  }
+
+  function loop(){ update(); draw(); requestAnimationFrame(loop); }
+
+  window.addEventListener('resize',resize);
+  resize(); loop();
+})();
+
+/* ═══════════════════════════════════════════════
+   AUDIO ENGINE
+═══════════════════════════════════════════════ */
+const AUDIO = (() => {
+  let AC=null, masterGain=null, musicGain=null, sfxGain=null;
+  let musicOn=true, sfxOn=true, musicVol=0.35, sfxVol=0.7;
+  let droneOsc=null, musicTimer=null;
+  const SCALE=[55,65.4,73.4,82.4,98,110,130.8,146.8]; // A minor low
+
+  function unlock(){
+    if(AC) return;
+    AC=new(window.AudioContext||window.webkitAudioContext)();
+    masterGain=AC.createGain(); masterGain.gain.value=1; masterGain.connect(AC.destination);
+    musicGain=AC.createGain(); musicGain.gain.value=musicVol; musicGain.connect(masterGain);
+    sfxGain=AC.createGain(); sfxGain.gain.value=sfxVol; sfxGain.connect(masterGain);
+    startMusic();
+  }
+
+  function note(freq,type,dur,gainVal,dest,startDelay=0){
+    if(!AC) return;
+    const o=AC.createOscillator(), g=AC.createGain();
+    const filt=AC.createBiquadFilter(); filt.type='lowpass'; filt.frequency.value=1200;
+    o.connect(filt); filt.connect(g); g.connect(dest);
+    o.type=type; o.frequency.value=freq;
+    const s=AC.currentTime+startDelay;
+    g.gain.setValueAtTime(0,s);
+    g.gain.linearRampToValueAtTime(gainVal,s+.05);
+    g.gain.setValueAtTime(gainVal,s+dur-.15);
+    g.gain.linearRampToValueAtTime(0,s+dur);
+    o.start(s); o.stop(s+dur);
+  }
+
+  function startMusic(){
+    if(!AC||!musicOn) return;
+    // Drone
+    if(droneOsc){ try{droneOsc.stop();}catch(e){} }
+    droneOsc=AC.createOscillator();
+    const dg=AC.createGain(), df=AC.createBiquadFilter();
+    df.type='lowpass'; df.frequency.value=120;
+    droneOsc.connect(df); df.connect(dg); dg.connect(musicGain);
+    droneOsc.type='sine'; droneOsc.frequency.value=27.5;
+    dg.gain.value=.55; droneOsc.start();
+    // Melody loop
+    const playMelody=()=>{
+      if(!musicOn||!AC) return;
+      const freq=SCALE[Math.floor(Math.random()*SCALE.length)];
+      const dur=2.5+Math.random()*3.5;
+      note(freq, Math.random()<.5?'sine':'triangle', dur, 0.35, musicGain);
+      // Occasional high overtone
+      if(Math.random()<.3) note(freq*2, 'sine', dur*.6, 0.15, musicGain, .1);
+      musicTimer=setTimeout(playMelody,(1000+Math.random()*1800));
+    };
+    setTimeout(()=>playMelody(), 400);
+    setTimeout(()=>playMelody(), 1200);
+    setTimeout(()=>playMelody(), 2100);
+  }
+
+  function stopMusic(){
+    if(musicTimer) clearTimeout(musicTimer);
+    if(droneOsc){ try{droneOsc.stop();}catch(e){} droneOsc=null; }
+  }
+
+  return {
+    unlock,
+    click(){
+      if(!AC||!sfxOn) return;
+      const o=AC.createOscillator(), g=AC.createGain();
+      o.connect(g); g.connect(sfxGain);
+      o.type='square'; o.frequency.value=720;
+      g.gain.setValueAtTime(.12,AC.currentTime);
+      g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+.09);
+      o.start(); o.stop(AC.currentTime+.09);
+    },
+    reveal(){
+      if(!AC||!sfxOn) return;
+      const o=AC.createOscillator(), g=AC.createGain();
+      o.connect(g); g.connect(sfxGain);
+      o.type='sine';
+      o.frequency.setValueAtTime(220,AC.currentTime);
+      o.frequency.exponentialRampToValueAtTime(880,AC.currentTime+.28);
+      g.gain.setValueAtTime(.18,AC.currentTime);
+      g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+.28);
+      o.start(); o.stop(AC.currentTime+.28);
+    },
+    threat(){
+      if(!AC||!sfxOn) return;
+      // Alarm-like pulse x3
+      for(let i=0;i<3;i++){
+        const o=AC.createOscillator(),g=AC.createGain();
+        o.connect(g); g.connect(sfxGain);
+        o.type='sawtooth'; o.frequency.value=220+i*55;
+        const st=AC.currentTime+i*.22;
+        g.gain.setValueAtTime(0,st); g.gain.linearRampToValueAtTime(.3,st+.04);
+        g.gain.setValueAtTime(.3,st+.14); g.gain.linearRampToValueAtTime(0,st+.2);
+        o.start(st); o.stop(st+.22);
+      }
+    },
+    eliminate(){
+      if(!AC||!sfxOn) return;
+      const b=AC.createOscillator(), bg=AC.createGain();
+      b.connect(bg); bg.connect(sfxGain);
+      b.type='sawtooth'; b.frequency.value=85;
+      bg.gain.setValueAtTime(.45,AC.currentTime);
+      bg.gain.exponentialRampToValueAtTime(.001,AC.currentTime+.9);
+      b.start(); b.stop(AC.currentTime+.9);
+      const sc=AC.createOscillator(), sg=AC.createGain();
+      sc.connect(sg); sg.connect(sfxGain);
+      sc.type='sawtooth';
+      sc.frequency.setValueAtTime(640,AC.currentTime+.08);
+      sc.frequency.exponentialRampToValueAtTime(90,AC.currentTime+.7);
+      sg.gain.setValueAtTime(0,AC.currentTime); sg.gain.linearRampToValueAtTime(.28,AC.currentTime+.08);
+      sg.gain.exponentialRampToValueAtTime(.001,AC.currentTime+.7);
+      sc.start(); sc.stop(AC.currentTime+.7);
+    },
+    win(){
+      if(!AC||!sfxOn) return;
+      [261.6,329.6,392,523.2,659.3].forEach((f,i)=>{
+        const o=AC.createOscillator(),g=AC.createGain();
+        o.connect(g); g.connect(sfxGain);
+        o.type='sine'; o.frequency.value=f;
+        const s=AC.currentTime+i*.13;
+        g.gain.setValueAtTime(0,s); g.gain.linearRampToValueAtTime(.28,s+.06);
+        g.gain.exponentialRampToValueAtTime(.001,s+.45);
+        o.start(s); o.stop(s+.45);
+      });
+    },
+    setMusicVol(v){ musicVol=v; if(musicGain) musicGain.gain.value=v; },
+    setSfxVol(v){ sfxVol=v; if(sfxGain) sfxGain.gain.value=v; },
+    toggleMusic(){ musicOn=!musicOn; if(musicOn) startMusic(); else stopMusic(); return musicOn; },
+    toggleSfx(){ sfxOn=!sfxOn; return sfxOn; },
+  };
+})();
+
+/* ═══════════════════════════════════════════════
+   i18n
+═══════════════════════════════════════════════ */
+const I18N = {
+  ru:{
+    tagline:'⚠ ПРОТОКОЛ ВЫЖИВАНИЯ АКТИВИРОВАН', sub:'// система отбора героев · v3.0 //',
+    numPl:'👥 КОЛИЧЕСТВО ИГРОКОВ', btnGo:'⚡ НАЧАТЬ МИССИЮ',
+    thAlert:'🚨 ВНИМАНИЕ — УГРОЗА ОБНАРУЖЕНА 🚨',
+    thAbilLbl:'⚡ СПОСОБНОСТИ ПРОТИВ УГРОЗЫ', thWeapLbl:'⚔️ ОРУЖИЕ ПРОТИВ УГРОЗЫ',
+    thSurvLbl:'🛡 КАК ВЫЖИТЬ', btnThr:'НАЧАТЬ ОТБОР ГЕРОЕВ →',
+    passTo:'ПЕРЕДАЙ ТЕЛЕФОН ИГРОКУ', btnPass:'👁 ПОСМОТРЕТЬ МОИ КАРТЫ',
+    passHint:'// ОСТАЛЬНЫЕ НЕ СМОТРЯТ НА ЭКРАН //',
+    pvInstr:'Выбери <b>одну карту</b> которую хочешь<br>раскрыть остальным игрокам:',
+    btnConfirm:'✓ РАСКРЫТЬ ВЫБРАННУЮ',
+    cands:'🧬 КАНДИДАТЫ', survived:'выжили', elim:'устранено',
+    round:'раунд', bunkerCap:'мест в бункере',
+    voteSec:'⚖️ ГОЛОСОВАНИЕ', voteInstr:'Обсудите раскрытые карты и проголосуйте:',
+    elimMsg:'устранён из бункера.', endTitle:'БУНКЕР ЗАКРЫТ',
+    endSub:'// ВЫЖИВШИЕ ГЕРОИ ОТОБРАНЫ //', btnRestart:'↺ НОВАЯ МИССИЯ',
+    settings:'НАСТРОЙКИ', langLbl:'ЯЗЫК / LANGUAGE', musicLbl:'МУЗЫКА',
+    sfxLbl:'ЗВУКОВЫЕ ЭФФЕКТЫ', classified:'[ засекречено ]',
+    stElim:'💀 УСТРАНЁН', stDone:'✅ ход сделан', stWait:'⏸ ждёт',
+    revTag:'РАСКРЫТО',
+    cats:{ABILITY:'🦸 СПОСОБНОСТЬ',WEAPON:'⚔️ ОРУЖИЕ',RACE:'👽 РАСА',WEAKNESS:'⚠️ СЛАБОСТЬ',STRENGTH:'💪 ФИЗСИЛА'},
+  },
+  en:{
+    tagline:'⚠ SURVIVAL PROTOCOL ACTIVATED', sub:'// hero selection system · v3.0 //',
+    numPl:'👥 NUMBER OF PLAYERS', btnGo:'⚡ START MISSION',
+    thAlert:'🚨 WARNING — THREAT DETECTED 🚨',
+    thAbilLbl:'⚡ ABILITIES AGAINST THREAT', thWeapLbl:'⚔️ WEAPONS AGAINST THREAT',
+    thSurvLbl:'🛡 HOW TO SURVIVE', btnThr:'BEGIN HERO SELECTION →',
+    passTo:'PASS PHONE TO PLAYER', btnPass:'👁 VIEW MY CARDS',
+    passHint:'// OTHERS MUST NOT LOOK AT THE SCREEN //',
+    pvInstr:'Choose <b>one card</b> you want to<br>reveal to all other players:',
+    btnConfirm:'✓ REVEAL SELECTED',
+    cands:'🧬 CANDIDATES', survived:'survived', elim:'eliminated',
+    round:'round', bunkerCap:'bunker spots',
+    voteSec:'⚖️ VOTE', voteInstr:'Discuss the revealed cards and vote:',
+    elimMsg:'has been eliminated from the bunker.', endTitle:'BUNKER SEALED',
+    endSub:'// SURVIVING HEROES SELECTED //', btnRestart:'↺ NEW MISSION',
+    settings:'SETTINGS', langLbl:'LANGUAGE', musicLbl:'MUSIC',
+    sfxLbl:'SOUND EFFECTS', classified:'[ classified ]',
+    stElim:'💀 ELIMINATED', stDone:'✅ turn done', stWait:'⏸ waiting',
+    revTag:'REVEALED',
+    cats:{ABILITY:'🦸 ABILITY',WEAPON:'⚔️ WEAPON',RACE:'👽 RACE',WEAKNESS:'⚠️ WEAKNESS',STRENGTH:'💪 STRENGTH'},
+  },
+};
+
+/* ═══════════════════════════════════════════════
+   GAME DATA (bilingual, index-based)
+═══════════════════════════════════════════════ */
+const DATA = {
+  pools:{
+    ru:{
+      ABILITY:['Управляет огнём','Управляет водой','Телепортация','Суперсила','Невидимость','Управление временем','Чтение мыслей','Лечение людей','Управление электричеством','Полёт','Управляет льдом','Управляет тенями','Управляет ростом растений','Супер скорость','Копирование способностей','Управляет ростом арбузов','Суперсильный мизинец','Невидим только ночью','Управляет пылью','Нет способности','Сонар как у летучей мыши','Управляет гравитацией','Телекинез','Дыхание под водой','Создаёт порталы','Контроль погоды','Интеграция с техникой','Управляет магнетизмом'],
+      WEAPON:['Молот Тора','Костюм Железного Человека','Трезубец Посейдона','Лазерная пушка','Магический меч','Энергетический щит','Двойные клинки','Лук и стрелы','Плазменная винтовка','Боевой посох','Когти (как у зверя)','Гранаты','Электрошокер','Огнемёт','Кинжал','Ножницы','Ручка','Пластиковый меч','Камень','Нет оружия','Цепная коса','Снайперская винтовка','Замороженный клинок','Щит из энергии','Звуковая пушка','Ракетомёт','Кнут из молний','Стазис-перчатка'],
+      RACE:['Человек','Пришелец','Полубог','Бог','Киборг','Робот','Мутант','Демон','Ангел','Рептилоид','Человек-волк','Человек-птица','Человек-рыба','Инопланетный разум','Теневое существо','Очень слабый пришелец','Мини-человек','Человек без памяти','Существо из слизи','Обычный человек','Дракон в облике человека','Древний дух','Клон без оригинала','Ожившая статуя','Нанобот-рой','Пришелец из будущего','Двойник из зеркального мира'],
+      WEAKNESS:['Боится высоты','Боится темноты','Аллергия на пыль','Быстро устаёт','Низкая выносливость','Не умеет работать в команде','Очень доверчивый','Паника в стрессе','Слаб к холоду','Слаб к жаре','Боится воды','Боится огня','Был раньше животным','Потерял память','Очень медленно думает','Боится арбузов','Слишком добрый','Постоянно отвлекается','Не может молчать','Зависит от кофе','Теряет силы под дождём','Боится кошек','Не умеет читать','Засыпает под музыку','Теряет способности при смехе','Боится пауков','Плохое зрение без очков','Должен говорить правду'],
+      STRENGTH:['Очень слабый','Слабый','Ниже среднего','Средний','Чуть выше среднего','Сильный','Очень сильный','Сверхчеловеческая сила','Огромная сила','Максимальная сила','Сила как у спортсмена','Сила как у солдата','Сила как у бодибилдера','Гигантская сила','Нереальная сила','Сильный только утром','Слабый но быстрый','Сильный но неуклюжий','Сильный только одной рукой','Почти без силы'],
+    },
+    en:{
+      ABILITY:['Controls fire','Controls water','Teleportation','Super strength','Invisibility','Time control','Mind reading','Healing power','Controls electricity','Flight','Controls ice','Controls shadows','Controls plant growth','Super speed','Ability copying','Controls watermelon growth','Super strong pinky','Invisible only at night','Controls dust','No ability','Bat sonar','Gravity control','Telekinesis','Underwater breathing','Portal creation','Weather control','Tech integration','Magnetic control'],
+      WEAPON:["Thor's Hammer","Iron Man Suit","Poseidon's Trident","Laser cannon","Magic sword","Energy shield","Dual blades","Bow and arrows","Plasma rifle","Battle staff","Beast claws","Grenades","Electric taser","Flamethrower","Dagger","Scissors","Pen","Plastic sword","Rock","No weapon","Chain scythe","Sniper rifle","Frozen blade","Energy barrier","Sonic cannon","Rocket launcher","Lightning whip","Stasis gauntlet"],
+      RACE:['Human','Alien','Demigod','God','Cyborg','Robot','Mutant','Demon','Angel','Reptilian','Werewolf','Birdman','Fishman','Alien intelligence','Shadow being','Very weak alien','Miniature human','Amnesiac human','Slime creature','Ordinary human','Dragon in human form','Ancient spirit','Clone without original','Living statue','Nanobot swarm','Time-traveler alien','Mirror dimension duplicate'],
+      WEAKNESS:['Afraid of heights','Afraid of darkness','Dust allergy','Gets tired quickly','Low endurance','Cannot work in a team','Too trusting','Panics under stress','Weak to cold','Weak to heat','Afraid of water','Afraid of fire','Was an animal before','Has amnesia','Extremely slow thinker','Afraid of watermelons','Too kind','Easily distracted','Cannot stay quiet','Coffee addict','Loses power in rain','Afraid of cats','Cannot read','Falls asleep to music','Loses abilities when laughing','Afraid of spiders','Needs glasses to see','Must always tell the truth'],
+      STRENGTH:['Extremely weak','Weak','Below average','Average','Slightly above average','Strong','Very strong','Superhuman strength','Enormous strength','Maximum strength','Athlete strength','Soldier strength','Bodybuilder strength','Giant strength','Unreal strength','Strong only in the morning','Weak but fast','Strong but clumsy','Strong with one arm only','Almost powerless'],
+    },
+  },
+  threats:{
+    ru:[
+      {icon:'🦖',name:'Годзилла',desc:'Гигантский монстр поднимается из океана и разрушает города смертоносным дыханием.',abil:['Управление электричеством','Суперсила','Управление временем','Телекинез'],weap:['Лазерная пушка','Плазменная винтовка','Ракетомёт','Молот Тора'],surv:'<strong>Тактика:</strong> ЭМП-атака дезориентирует монстра. Мощный удар суперсилой в горло прерывает радиоактивное дыхание. Лазерный огонь по глазам снижает точность атак. Временно́й откат позволяет эвакуировать гражданских.'},
+      {icon:'🌋',name:'Огненные Титаны',desc:'Армия исполинов из лавы выходит из вулканов, сжигая всё на своём пути.',abil:['Управляет водой','Управляет льдом','Управляет ростом растений','Контроль погоды'],weap:['Трезубец Посейдона','Замороженный клинок','Энергетический щит'],surv:'<strong>Тактика:</strong> Вода и лёд останавливают лаву. Трезубец Посейдона вызывает море. Заморозьте их путь — лава застывает в ловушку.'},
+      {icon:'🐉',name:'Ледяной Дракон',desc:'Существо размером с гору замораживает целые страны своим дыханием.',abil:['Управляет огнём','Управление электричеством','Супер скорость','Управляет тенями'],weap:['Огнемёт','Магический меч','Плазменная винтовка','Кнут из молний'],surv:'<strong>Тактика:</strong> Огонь растапливает ледяную броню. Магический меч разрушает чары. Атакуйте крылья — без них он не может замораживать новые территории.'},
+      {icon:'🐛',name:'Гигантские Песчаные Черви',desc:'Монстры размером с поезд пожирают города в пустыне, двигаясь под землёй.',abil:['Полёт','Телепортация','Управляет льдом','Управление электричеством'],weap:['Лазерная пушка','Замороженный клинок','Звуковая пушка','Ракетомёт'],surv:'<strong>Тактика:</strong> Держитесь в воздухе — черви не умеют летать. Электрические удары парализуют нервную систему. Заморозьте грунт — черви застревают.'},
+      {icon:'🌪️',name:'Тёмный Маг',desc:'Древний чародей вызывает бесконечные грозы и магические катаклизмы.',abil:['Чтение мыслей','Управление временем','Копирование способностей','Управляет гравитацией'],weap:['Магический меч','Энергетический щит','Стазис-перчатка','Боевой посох'],surv:'<strong>Тактика:</strong> Чтение мыслей раскрывает следующее заклинание. Стазис-перчатка прерывает произнесение. Магический меч разрезает магические барьеры.'},
+      {icon:'🕷️',name:'Армия Механических Пауков',desc:'Миллионы металлических пауков с ИИ захватывают мегаполисы.',abil:['Управление электричеством','Интеграция с техникой','Управляет магнетизмом','Телекинез'],weap:['Электрошокер','Кнут из молний','Плазменная винтовка','Огнемёт'],surv:'<strong>Тактика:</strong> ЭМП уничтожает армию разом. Интеграция с техникой перехватывает управление роем. Магнетизм разбрасывает металлические корпуса.'},
+      {icon:'🐍',name:'Морской Змей',desc:'Существо размером с остров поднимается со дна и топит целые флоты.',abil:['Управляет водой','Полёт','Управляет льдом','Дыхание под водой'],weap:['Трезубец Посейдона','Лазерная пушка','Снайперская винтовка','Ракетомёт'],surv:'<strong>Тактика:</strong> Трезубец Посейдона даёт контроль над океаном. Заморозьте воду вокруг — ловушка. Атакуйте с воздуха. Цельтесь в глаза.'},
+      {icon:'☄️',name:'Огромный Метеорит',desc:'Астероид размером с город несётся к Земле. До удара — часы.',abil:['Полёт','Управление временем','Управляет огнём','Управляет льдом'],weap:['Плазменная винтовка','Лазерная пушка','Ракетомёт','Костюм Железного Человека'],surv:'<strong>Тактика:</strong> Полёт выводит за атмосферу. Лазер и плазма разбивают метеорит на куски в космосе. Управление временем — крайняя мера: замедлить падение для эвакуации.'},
+      {icon:'🧟',name:'Вирус Мутантов',desc:'Биологический агент превращает заражённых в агрессивных мутантов за минуты.',abil:['Лечение людей','Телепортация','Невидимость','Чтение мыслей'],weap:['Энергетический щит','Двойные клинки','Электрошокер','Стазис-перчатка'],surv:'<strong>Тактика:</strong> Лечение людей — главная способность: создайте антидот. Телепортация эвакуирует незаражённых. Стазис обездвиживает мутантов без убийства.'},
+      {icon:'🌑',name:'Король Теней',desc:'Тёмный бог поглощает солнечный свет, погружая мир в вечную ночь.',abil:['Управляет огнём','Управление электричеством','Управляет тенями','Управляет магнетизмом'],weap:['Магический меч','Кнут из молний','Огнемёт','Лазерная пушка'],surv:'<strong>Тактика:</strong> Свет — его слабость. Вспышки молний и огонь создают яркость. Лазер фокусирует свет прямо в ядро Короля.'},
+      {icon:'🔥',name:'Огненные Птицы',desc:'Гигантские птицы из чистого пламени выжигают леса и города.',abil:['Управляет водой','Управляет льдом','Управление электричеством','Контроль погоды'],weap:['Трезубец Посейдона','Замороженный клинок','Лазерная пушка','Снайперская винтовка'],surv:'<strong>Тактика:</strong> Вода гасит пламя — трезубец вызывает ливень. Лёд обездвиживает крылья. Контроль погоды: гроза уничтожает целую стаю.'},
+      {icon:'🌊',name:'Суперцунами',desc:'Волна высотой 500 метров несётся на береговые города.',abil:['Управляет водой','Суперсила','Управляет льдом','Управляет гравитацией'],weap:['Трезубец Посейдона','Энергетический щит','Молот Тора','Стазис-перчатка'],surv:'<strong>Тактика:</strong> Трезубец + контроль воды останавливают волну на подходе. Заморозьте фронт волны — превратите в ледяную стену. Молот Тора создаёт контр-удар.'},
+      {icon:'🌍',name:'Подземный Монстр',desc:'Древнее существо движется под землёй, вызывая провалы и поглощая кварталы.',abil:['Суперсила','Управляет льдом','Телекинез','Управляет гравитацией'],weap:['Молот Тора','Замороженный клинок','Ракетомёт','Плазменная винтовка'],surv:'<strong>Тактика:</strong> Заморозьте грунт — монстр застревает. Молот Тора обнаруживает тоннели. Телекинез вытаскивает его на поверхность.'},
+      {icon:'👾',name:'Инопланетный Рой',desc:'Миллиарды насекомых-пришельцев отключают всё электричество на планете.',abil:['Управление электричеством','Телепортация','Чтение мыслей','Интеграция с техникой'],weap:['Плазменная винтовка','Звуковая пушка','Электрошокер','Кнут из молний'],surv:'<strong>Тактика:</strong> Рой общается телепатически — читайте его мысли. Мощный ЭМП-импульс уничтожает органику. Звуковая пушка дезориентирует рой.'},
+      {icon:'🕳️',name:'Живая Чёрная Дыра',desc:'Разумная аномалия поглощает здания и всё в радиусе действия.',abil:['Управление временем','Телепортация','Управляет гравитацией','Управляет магнетизмом'],weap:['Стазис-перчатка','Энергетический щит','Плазменная винтовка','Костюм Железного Человека'],surv:'<strong>Тактика:</strong> Управление временем закрывает аномалию. Стазис-перчатка замедляет расширение. Телепортация для мгновенной эвакуации.'},
+      {icon:'👑',name:'Огненный Король Лавы',desc:'Древний бог магмы ведёт армию вулканических чудовищ.',abil:['Управляет водой','Управляет льдом','Управляет ростом растений','Контроль погоды'],weap:['Трезубец Посейдона','Замороженный клинок','Молот Тора','Снайперская винтовка'],surv:'<strong>Тактика:</strong> Лава боится воды и льда. Трезубец вызывает море прямо на Короля. Растительный барьер замедляет армию. Молот разбивает каменную броню.'},
+    ],
+    en:[
+      {icon:'🦖',name:'Godzilla',desc:'A colossal monster rises from the ocean, leveling cities with its tail and radioactive breath.',abil:['Controls electricity','Super strength','Time control','Telekinesis'],weap:['Laser cannon','Plasma rifle','Rocket launcher',"Thor's Hammer"],surv:'<strong>Strategy:</strong> EMP attack disorients the monster. A super-strength blow to the throat interrupts radioactive breath. Laser fire at the eyes reduces accuracy. Time control buys time for civilian evacuation.'},
+      {icon:'🌋',name:'Fire Titans',desc:'An army of lava giants erupts from volcanoes, burning everything in their path.',abil:['Controls water','Controls ice','Controls plant growth','Weather control'],weap:["Poseidon's Trident","Frozen blade","Energy shield"],surv:'<strong>Strategy:</strong> Water and ice stop lava cold. The Trident calls the sea. Freeze their path — lava hardens into a trap.'},
+      {icon:'🐉',name:'Ice Dragon',desc:'A mountain-sized creature freezes entire countries in seconds with its breath.',abil:['Controls fire','Controls electricity','Super speed','Controls shadows'],weap:['Flamethrower','Magic sword','Plasma rifle','Lightning whip'],surv:'<strong>Strategy:</strong> Fire melts the ice armor. Magic sword breaks the enchantment. Target the wings — without them it cannot freeze new territory.'},
+      {icon:'🐛',name:'Giant Sand Worms',desc:'Train-sized monsters devour desert cities, tunneling underground.',abil:['Flight','Teleportation','Controls ice','Controls electricity'],weap:['Laser cannon','Frozen blade','Sonic cannon','Rocket launcher'],surv:'<strong>Strategy:</strong> Stay airborne — worms cannot fly. Electric blasts paralyze the nervous system. Freeze the ground — worms get trapped in solid earth.'},
+      {icon:'🌪️',name:'Dark Mage',desc:'An ancient sorcerer summons endless storms and magical catastrophes.',abil:['Mind reading','Time control','Ability copying','Gravity control'],weap:['Magic sword','Energy shield','Stasis gauntlet','Battle staff'],surv:'<strong>Strategy:</strong> Mind reading reveals the next spell before it is cast. Stasis gauntlet interrupts spellcasting. Magic sword cuts through magical barriers.'},
+      {icon:'🕷️',name:'Mechanical Spider Army',desc:'Millions of AI-powered metal spiders capture megacities.',abil:['Controls electricity','Tech integration','Magnetic control','Telekinesis'],weap:['Electric taser','Lightning whip','Plasma rifle','Flamethrower'],surv:'<strong>Strategy:</strong> EMP wipes out the entire swarm at once. Tech integration hijacks the hive mind. Magnetism scatters their metal bodies.'},
+      {icon:'🐍',name:'Sea Serpent',desc:'An island-sized creature rises from the deep, sinking entire fleets with one strike.',abil:['Controls water','Flight','Controls ice','Underwater breathing'],weap:["Poseidon's Trident",'Laser cannon','Sniper rifle','Rocket launcher'],surv:"<strong>Strategy:</strong> Poseidon's Trident gives control of the ocean. Freeze the water around it — a trap. Attack from the air. Aim for the eyes."},
+      {icon:'☄️',name:'Giant Meteor',desc:'A city-sized asteroid is headed for Earth. Hours until impact.',abil:['Flight','Time control','Controls fire','Controls ice'],weap:['Plasma rifle','Laser cannon','Rocket launcher','Iron Man Suit'],surv:'<strong>Strategy:</strong> Flight gets you beyond the atmosphere. Laser and plasma fire destroy the meteor in space. Time control as a last resort — slow the fall enough for evacuation.'},
+      {icon:'🧟',name:'Mutant Virus',desc:'A biological agent turns the infected into aggressive mutants within minutes.',abil:['Healing power','Teleportation','Invisibility','Mind reading'],weap:['Energy shield','Dual blades','Electric taser','Stasis gauntlet'],surv:'<strong>Strategy:</strong> Healing power is the key — develop an antidote. Teleportation evacuates the uninfected. Stasis immobilizes mutants without killing them.'},
+      {icon:'🌑',name:'Shadow King',desc:'A dark god absorbs sunlight, plunging the world into eternal night.',abil:['Controls fire','Controls electricity','Controls shadows','Magnetic control'],weap:['Magic sword','Lightning whip','Flamethrower','Laser cannon'],surv:'<strong>Strategy:</strong> Light is its weakness. Lightning flashes and fire create brightness. Focus laser directly into the Shadow King\'s core.'},
+      {icon:'🔥',name:'Fire Birds',desc:'Gargantuan birds of pure flame incinerate forests and cities with their wings.',abil:['Controls water','Controls ice','Controls electricity','Weather control'],weap:["Poseidon's Trident",'Frozen blade','Laser cannon','Sniper rifle'],surv:'<strong>Strategy:</strong> Water extinguishes flame — the Trident calls a downpour. Ice locks the wings. Weather control: summon a storm to eliminate the entire flock.'},
+      {icon:'🌊',name:'Super Tsunami',desc:'A 500-meter wave races toward coastal cities.',abil:['Controls water','Super strength','Controls ice','Gravity control'],weap:["Poseidon's Trident",'Energy shield',"Thor's Hammer",'Stasis gauntlet'],surv:"<strong>Strategy:</strong> Trident + water control stop the wave before it hits. Freeze the wave front — turn it into an ice wall. Thor's Hammer creates a counter-strike that splits the wave."},
+      {icon:'🌍',name:'Underground Monster',desc:'An ancient creature tunnels underground, causing sinkholes that swallow city blocks.',abil:['Super strength','Controls ice','Telekinesis','Gravity control'],weap:["Thor's Hammer",'Frozen blade','Rocket launcher','Plasma rifle'],surv:"<strong>Strategy:</strong> Freeze the ground — the monster gets stuck. Thor's Hammer reveals the tunnels. Telekinesis drags it to the surface."},
+      {icon:'👾',name:'Alien Swarm',desc:'Billions of alien insects disable all electricity across the planet.',abil:['Controls electricity','Teleportation','Mind reading','Tech integration'],weap:['Plasma rifle','Sonic cannon','Electric taser','Lightning whip'],surv:'<strong>Strategy:</strong> The swarm communicates telepathically — read its plans. A massive EMP destroys the organic swarm. Sonic cannon disorients the collective mind.'},
+      {icon:'🕳️',name:'Living Black Hole',desc:'A sentient anomaly absorbs buildings, vehicles, and everything within range.',abil:['Time control','Teleportation','Gravity control','Magnetic control'],weap:['Stasis gauntlet','Energy shield','Plasma rifle','Iron Man Suit'],surv:'<strong>Strategy:</strong> Time control can close the anomaly. Stasis gauntlet slows its expansion. Never enter the radius — work from a distance. Teleport for instant evacuation.'},
+      {icon:'👑',name:'Lava Fire King',desc:'An ancient magma god commands an army of volcanic monsters across continents.',abil:['Controls water','Controls ice','Controls plant growth','Weather control'],weap:["Poseidon's Trident",'Frozen blade',"Thor's Hammer",'Sniper rifle'],surv:"<strong>Strategy:</strong> Lava fears water and ice. The Trident calls the sea directly onto the King. A plant barrier slows the army. Thor's Hammer shatters the stone armor."},
+    ],
+  },
+};
+
+const CATS = ['ABILITY','WEAPON','RACE','WEAKNESS','STRENGTH'];
+const CAT_COLORS = {ABILITY:'var(--cyan)',WEAPON:'var(--gold)',RACE:'#b388ff',WEAKNESS:'var(--red)',STRENGTH:'var(--green)'};
+
+/* ═══════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════ */
+let lang='ru', players=[], round=1, turnIdx=0, pickedCat=null, threatIdx=0;
+
+const t = k => I18N[lang][k];
+const pool = (cat,idx) => DATA.pools[lang][cat][idx] ?? DATA.pools.ru[cat][idx];
+const ri = m => Math.floor(Math.random()*m);
+const getAlive = () => players.filter(p=>!p.eliminated);
+
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  window.scrollTo(0,0);
+}
+
+function updateUI(){
+  const L=I18N[lang];
+  document.getElementById('logo-pre').textContent=L.tagline;
+  document.getElementById('logo-sub').textContent=L.sub;
+  document.getElementById('flabel').textContent=L.numPl;
+  document.getElementById('btn-go').textContent=L.btnGo;
+  document.getElementById('th-alert').textContent=L.thAlert;
+  document.getElementById('th-abil-lbl').textContent=L.thAbilLbl;
+  document.getElementById('th-weap-lbl').textContent=L.thWeapLbl;
+  document.getElementById('th-surv-lbl').textContent=L.thSurvLbl;
+  document.getElementById('btn-thr').textContent=L.btnThr;
+  document.getElementById('pass-to').textContent=L.passTo;
+  document.getElementById('btn-pass').textContent=L.btnPass;
+  document.getElementById('pass-hint').textContent=L.passHint;
+  document.getElementById('pv-instr').innerHTML=L.pvInstr;
+  document.getElementById('btn-confirm').textContent=L.btnConfirm;
+  document.getElementById('b-cand-lbl').textContent=L.cands;
+  document.getElementById('end-title').textContent=L.endTitle;
+  document.getElementById('end-sub').textContent=L.endSub;
+  document.getElementById('btn-restart').textContent=L.btnRestart;
+  document.getElementById('set-title').textContent=L.settings;
+  document.getElementById('set-lang-lbl').textContent=L.langLbl;
+  document.getElementById('set-music-lbl').textContent=L.musicLbl;
+  document.getElementById('set-sfx-lbl').textContent=L.sfxLbl;
+}
+
+/* ── Settings ── */
+document.getElementById('gear-btn').onclick=()=>{ AUDIO.unlock(); AUDIO.click(); toggleSettings(); };
+document.getElementById('set-close').onclick=()=>{ AUDIO.click(); toggleSettings(); };
+function toggleSettings(){
+  document.getElementById('settings-panel').classList.toggle('open');
+}
+function setLang(l){
+  AUDIO.click(); lang=l;
+  document.getElementById('btn-ru').classList.toggle('on',l==='ru');
+  document.getElementById('btn-en').classList.toggle('on',l==='en');
+  updateUI();
+}
+function setMusicVol(v){
+  AUDIO.unlock(); AUDIO.setMusicVol(v/100);
+  document.getElementById('vol-music-val').textContent=v;
+  document.getElementById('vol-music').style.setProperty('--pct',v+'%');
+}
+function setSfxVol(v){
+  AUDIO.unlock(); AUDIO.setSfxVol(v/100);
+  document.getElementById('vol-sfx-val').textContent=v;
+  document.getElementById('vol-sfx').style.setProperty('--pct',v+'%');
+}
+function toggleMusic(){
+  AUDIO.unlock();
+  const on=AUDIO.toggleMusic();
+  document.getElementById('tog-music').classList.toggle('on',on);
+  document.getElementById('tog-music-lbl').textContent=on?'ON':'OFF';
+}
+function toggleSfx(){
+  AUDIO.unlock();
+  const on=AUDIO.toggleSfx();
+  document.getElementById('tog-sfx').classList.toggle('on',on);
+  document.getElementById('tog-sfx-lbl').textContent=on?'ON':'OFF';
+}
+// Init slider visuals
+document.getElementById('vol-music').style.setProperty('--pct','35%');
+document.getElementById('vol-sfx').style.setProperty('--pct','70%');
+
+/* ── Setup ── */
+(()=>{
+  const w=document.getElementById('npicker');
+  for(let n=4;n<=8;n++){
+    const b=document.createElement('button'); b.className='nbtn'; b.textContent=n;
+    b.onclick=()=>{
+      AUDIO.unlock(); AUDIO.click();
+      document.querySelectorAll('.nbtn').forEach(x=>x.classList.remove('on'));
+      b.classList.add('on');
+      document.getElementById('btn-go').disabled=false;
+      window._n=n;
+    };
+    w.appendChild(b);
+  }
+})();
+
+function startGame(){
+  AUDIO.unlock(); AUDIO.click();
+  const count=window._n;
+  players=[];
+  for(let i=0;i<count;i++){
+    const traits={}, rev={};
+    CATS.forEach(c=>{
+      traits[c]=ri(DATA.pools.ru[c].length);
+      rev[c]=false;
+    });
+    players.push({name:`${t('stWait').includes('wait')?'Player':'Игрок'} ${i+1}`, traits, revealed:rev, revealedThisRound:false, eliminated:false});
+  }
+  // Fix player name based on language
+  players.forEach((p,i)=>{ p.name=lang==='en'?`Player ${i+1}`:`Игрок ${i+1}`; });
+  threatIdx=ri(DATA.threats.ru.length);
+  round=1; turnIdx=0;
+  showThreat();
+}
+
+function showThreat(){
+  AUDIO.threat();
+  const th=DATA.threats[lang][threatIdx];
+  document.getElementById('th-icon').textContent=th.icon;
+  document.getElementById('th-name').textContent=th.name;
+  document.getElementById('th-desc').textContent=th.desc;
+  document.getElementById('th-abil').innerHTML=th.abil.map(a=>`<span class="tag a">⚡ ${a}</span>`).join('');
+  document.getElementById('th-weap').innerHTML=th.weap.map(a=>`<span class="tag w">⚔️ ${a}</span>`).join('');
+  document.getElementById('th-surv').innerHTML=th.surv;
+  show('S_threat');
+}
+
+function toPass(){
+  AUDIO.click();
+  const next=findNext(turnIdx);
+  if(next===-1){ toBoard(true); return; }
+  turnIdx=next;
+  const p=players[turnIdx];
+  document.getElementById('pass-badge').textContent=`${t('roundLabel')||'РАУНД'} ${round}`;
+  document.getElementById('pass-name').textContent=p.name;
+  show('S_pass');
+}
+
+function findNext(from){
+  for(let i=0;i<players.length;i++){
+    const idx=(from+i)%players.length;
+    const p=players[idx];
+    if(!p.eliminated && !p.revealedThisRound && CATS.some(c=>!p.revealed[c])) return idx;
+  }
+  return -1;
+}
+
+function openPrivate(){
+  AUDIO.click();
+  const p=players[turnIdx];
+  pickedCat=null;
+  document.getElementById('btn-confirm').disabled=true;
+  document.getElementById('pv-rnd').textContent=`${lang==='en'?'ROUND':'РАУНД'} ${round}`;
+  document.getElementById('pv-name').textContent=p.name;
+
+  const wrap=document.getElementById('trait-secs');
+  wrap.innerHTML='';
+  CATS.forEach(c=>{
+    const isRev=p.revealed[c];
+    const sec=document.createElement('div'); sec.className=`cat-sec cat-${c}`;
+    const hd=document.createElement('div'); hd.className='cat-hd';
+    hd.style.color=CAT_COLORS[c]; hd.textContent=I18N[lang].cats[c];
+    sec.appendChild(hd);
+    const card=document.createElement('div');
+    card.className='t-card'+(isRev?' locked':'');
+    card.innerHTML=`<div class="t-num">${isRev?'✓':'?'}</div><div class="t-text">${pool(c,p.traits[c])}</div>${isRev?`<span class="rev-tag">${t('revTag')}</span>`:'<div class="t-chk">✓</div>'}`;
+    if(!isRev) card.onclick=()=>{
+      AUDIO.click();
+      document.querySelectorAll('.t-card:not(.locked)').forEach(x=>x.classList.remove('sel'));
+      card.classList.add('sel'); pickedCat=c;
+      document.getElementById('btn-confirm').disabled=false;
+    };
+    sec.appendChild(card); wrap.appendChild(sec);
+  });
+  show('S_private');
+}
+
+function confirmTrait(){
+  if(!pickedCat) return;
+  AUDIO.reveal();
+  players[turnIdx].revealed[pickedCat]=true;
+  players[turnIdx].revealedThisRound=true;
+  turnIdx=(turnIdx+1)%players.length;
+  toPass();
+}
+
+function toBoard(votePhase){
+  const th=DATA.threats[lang][threatIdx];
+  document.getElementById('b-rnd').textContent=`${lang==='en'?'ROUND':'РАУНД'} ${round}`;
+  document.getElementById('b-threat').textContent=`${th.icon} ${th.name}`;
+  const alive=getAlive();
+  document.getElementById('b-stats').innerHTML=`
+    <div><div class="stat-n">${alive.length}</div><div class="stat-l">${t('survived')}</div></div>
+    <div><div class="stat-n">${players.length-alive.length}</div><div class="stat-l">${t('elim')}</div></div>
+    <div><div class="stat-n">${round}</div><div class="stat-l">${t('round')}</div></div>
+    <div><div class="stat-n">${Math.ceil(players.length/2)}</div><div class="stat-l">${t('bunkerCap')}</div></div>
+  `;
+  const grid=document.getElementById('b-grid'); grid.innerHTML='';
+  players.forEach((p,pi)=>{
+    const card=document.createElement('div');
+    card.className='b-card'+(p.eliminated?' elim':'');
+    card.style.animationDelay=(pi*.05)+'s';
+    const barC=p.eliminated?'var(--red)':p.revealedThisRound?'var(--green)':'var(--cyan)';
+    const status=p.eliminated?t('stElim'):p.revealedThisRound?t('stDone'):t('stWait');
+    const traitsHtml=CATS.map(c=>{
+      const known=p.revealed[c];
+      return `<li class="b-trait"><span class="b-dot ${known?'k':'u'}"></span><span class="b-cat" style="color:${CAT_COLORS[c]}">${I18N[lang].cats[c].split(' ')[0]}</span><span class="b-tt ${known?'':'hid'}">${known?pool(c,p.traits[c]):t('classified')}</span></li>`;
+    }).join('');
+    card.innerHTML=`<div class="b-stripe" style="background:${barC};"></div><div class="b-pname">${p.name}</div><div class="b-status">${status}</div><ul class="b-traits">${traitsHtml}</ul>${p.eliminated?'<div class="elim-stamp">'+t('stElim')+'</div>':''}`;
+    grid.appendChild(card);
+  });
+  const bv=document.getElementById('b-vote');
+  if(votePhase){
+    let html=`<div class="vote-wrap"><div class="slabel" style="color:var(--gold);">${t('voteSec')}</div><p style="font-size:15px;font-weight:300;color:var(--muted);margin-bottom:4px;">${t('voteInstr')}</p><div class="vgrid">`;
+    alive.forEach(p=>{ const idx=players.indexOf(p); html+=`<button class="vbtn" onclick="eliminate(${idx})">💀 ${p.name}</button>`; });
+    html+=`</div></div>`; bv.innerHTML=html;
+  } else bv.innerHTML='';
+  document.getElementById('b-msg').classList.remove('on');
+  show('S_board');
+}
+
+function eliminate(idx){
+  AUDIO.eliminate();
+  players[idx].eliminated=true;
+  const msg=document.getElementById('b-msg');
+  msg.textContent=`⚠ ${players[idx].name} ${t('elimMsg')}`;
+  msg.classList.add('on');
+  // Rebuild grid to show stamp
+  const cards=document.getElementById('b-grid').querySelectorAll('.b-card');
+  if(cards[idx]){ cards[idx].classList.add('elim'); }
+  const alive=getAlive();
+  if(alive.length<=Math.floor(players.length/2)){ setTimeout(endGame,1400); return; }
+  setTimeout(()=>{
+    round++;
+    players.forEach(p=>{ p.revealedThisRound=p.eliminated||CATS.every(c=>p.revealed[c]); });
+    turnIdx=players.findIndex(p=>!p.eliminated);
+    toPass();
+  },1900);
+}
+
+function endGame(){
+  AUDIO.win();
+  const alive=getAlive();
+  document.getElementById('e-list').innerHTML=alive.map(p=>`<div class="surv-chip">🏅 ${p.name}</div>`).join('');
+  show('S_end');
+}
+
+// Wire all buttons for sound + audio unlock
+document.querySelectorAll('button').forEach(b=>{
+  if(b.id==='gear-btn'||b.id==='set-close') return;
+  b.addEventListener('click',()=>{ AUDIO.unlock(); },true);
+});
+
+updateUI();
+</script>
+</body>
+</html>
